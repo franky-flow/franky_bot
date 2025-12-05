@@ -69,6 +69,19 @@ def generate_launch_description():
         output='screen'
     )
 
+    # Controllers de los componentes hardware
+    diff_drive_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["diff_cont"],
+    )
+
+    joint_broad_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_broad"],
+    )
+
     # Launch them all!
     return LaunchDescription([
         world_arg,
@@ -76,4 +89,6 @@ def generate_launch_description():
         gazebo,
         spawn_entity,
         bridge,
+        diff_drive_spawner,
+        joint_broad_spawner
     ])

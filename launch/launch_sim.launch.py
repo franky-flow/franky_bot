@@ -55,7 +55,19 @@ def generate_launch_description():
                                    '-z', '0.1'],
                         output='screen')
 
-
+    # Bridge between Gazebo and ROS2 topics
+    # This bridges /cmd_vel from ROS2 to Gazebo and /odom from Gazebo to ROS2
+    bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist',
+            '/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry',
+            '/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V',
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+        ],
+        output='screen'
+    )
 
     # Launch them all!
     return LaunchDescription([
@@ -63,4 +75,5 @@ def generate_launch_description():
         rsp,
         gazebo,
         spawn_entity,
+        bridge,
     ])

@@ -12,7 +12,7 @@
             <geometry>
                 <cylinder radius="0.05" length="0.04"/>
             </geometry>
-            <material name="red"/>
+            <!-- <material name="red"/> -->
         </visual>
         <collision>
             <geometry>
@@ -30,6 +30,7 @@
             <pose>0 0 0 0 0 0</pose>
             <visualize>true</visualize>
             <update_rate>10</update_rate>
+            <always_on>true</always_on>
             <lidar>
                 <scan>
                     <horizontal>
@@ -45,9 +46,13 @@
                     <resolution>0.01</resolution>
                 </range>
             </lidar>
-            <alwaysOn>true</alwaysOn>
-            <topic>scan</topic>
-            <frame_id>laser_frame_link</frame_id>
+            <plugin filename="libgazebo_ros_ray_sensor.so" name="laser_controller">
+                <ros>
+                    <remapping>~/out:=scan</remapping>
+                </ros>
+                <output_type>sensor_msgs/LaserScan</output_type>
+                <frame_name>laser_frame_link</frame_name>
+            </plugin>
         </sensor>
     </gazebo>
 

@@ -74,7 +74,7 @@ def generate_launch_description():
     diff_drive_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["my_diff_controller"],
+        arguments=["diff_cont"],
     )
 
     joint_broad_spawner = Node(
@@ -82,6 +82,19 @@ def generate_launch_description():
         executable="spawner",
         arguments=["joint_broad"],
     )
+
+    joy_params = os.path.join(get_package_share_directory('franky_bot'),'config','joystick.yaml')
+
+    teleop_node = Node(
+            package='teleop_twist_joy', 
+            executable='teleop_node',
+            name = 'teleop_node',
+            parameters=[joy_params],
+            remappings=[('/cmd_vel', '/diff_cont/cmd_vel')]
+            )
+
+
+# And add to launch description at the bottom
 
     # Launch them all!
     return LaunchDescription([
@@ -91,5 +104,6 @@ def generate_launch_description():
         spawn_entity,
         bridge,
         diff_drive_spawner,
-        joint_broad_spawner
+        joint_broad_spawner,
+        teleop_node
     ])

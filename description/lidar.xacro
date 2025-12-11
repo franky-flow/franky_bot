@@ -31,6 +31,8 @@
             <visualize>true</visualize>
             <update_rate>10</update_rate>
             <always_on>true</always_on>
+            <topic>scan</topic>
+            <gz_frame_id>laser_frame_link</gz_frame_id>
             <lidar>
                 <scan>
                     <horizontal>
@@ -46,13 +48,6 @@
                     <resolution>0.01</resolution>
                 </range>
             </lidar>
-            <plugin filename="libgazebo_ros_ray_sensor.so" name="laser_controller">
-                <ros>
-                    <remapping>~/out:=scan</remapping>
-                </ros>
-                <output_type>sensor_msgs/LaserScan</output_type>
-                <frame_name>laser_frame_link</frame_name>
-            </plugin>
         </sensor>
     </gazebo>
 

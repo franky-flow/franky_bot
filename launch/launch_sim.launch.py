@@ -30,7 +30,8 @@ def generate_launch_description():
     default_world = os.path.join(
         get_package_share_directory(package_name),
         'worlds',
-        'empty.world'
+        #'empty.world'
+        'empty-with-shapes1.world'
     )    
     
     world = LaunchConfiguration('world')
@@ -66,6 +67,7 @@ def generate_launch_description():
             '/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V',
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+            '/camera@sensor_msgs/msg/Image@gz.msgs.Image',
         ],
         output='screen'
     )

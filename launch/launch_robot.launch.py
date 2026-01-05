@@ -27,7 +27,7 @@ def generate_launch_description():
     rsp = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory(package_name),'launch','rsp.launch.py'
-                )]), launch_arguments={'use_sim_time': 'true'}.items()
+                )]), launch_arguments={'use_sim_time': 'false'}.items()
     )
 
     # World file configuration
@@ -56,7 +56,7 @@ def generate_launch_description():
             '/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist',
             '/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry',
             '/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V',
-            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+          #  '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
             '/camera@sensor_msgs/msg/Image@gz.msgs.Image',
         ],
@@ -106,6 +106,12 @@ def generate_launch_description():
 
     joy_params = os.path.join(get_package_share_directory('franky_bot'),'config','joystick.yaml')
 
+    joy_node = Node(
+            package='joy_linux',
+            executable='joy_linux_node',
+            parameters=[joy_params],
+         )
+
     teleop_node = Node(
             package='teleop_twist_joy', 
             executable='teleop_node',
@@ -125,5 +131,6 @@ def generate_launch_description():
         delayed_controller_manager,
         delayed_diff_drive_spawner,
         delayed_joint_broad_spawner,
+        joy_node,
         teleop_node
     ])

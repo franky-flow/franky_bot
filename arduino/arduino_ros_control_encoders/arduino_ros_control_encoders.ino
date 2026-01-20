@@ -1,17 +1,17 @@
-// Franky_Bot Firmware ROS2 con Encoders - Versión CORREGIDA (Protocolo Request-Response)
+// Franky_Bot Firmware ROS2 con Encoders 
 // Pines L298N
 #define ENA 5     // PWM velocidad izquierda
-#define IN1 9
-#define IN2 10
+#define IN1 9     // Dirección izquierda
+#define IN2 10  // Dirección izquierda
 #define ENB 6     // PWM velocidad derecha
-#define IN3 11
-#define IN4 12
+#define IN3 11    // Dirección derecha
+#define IN4 12    // Dirección derecha
 
 // Pines encoders Hall
-#define LEFT_ENCODER_A  2   // Interrupt
-#define LEFT_ENCODER_B  3
-#define RIGHT_ENCODER_A 18  // Interrupt
-#define RIGHT_ENCODER_B 19
+#define LEFT_ENCODER_A  2   // Izquierda Input A
+#define LEFT_ENCODER_B  3   // Izquierda Input B
+#define RIGHT_ENCODER_A 18  // Derecha Input A
+#define RIGHT_ENCODER_B 19  // Derecha Input B
 
 volatile long left_ticks = 0;
 volatile long right_ticks = 0;
@@ -20,6 +20,7 @@ void setup() {
   Serial.begin(57600);
   while (!Serial) { ; }  // Espera serial
 
+  // decalaración pines
   pinMode(ENA, OUTPUT);
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);

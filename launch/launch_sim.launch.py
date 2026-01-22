@@ -42,19 +42,20 @@ def generate_launch_description():
         description='World to load'
     )
 
-    # Include the Gazebo launch file, provided by the gazebo_ros package
+    # Include the Gazebo launch file, provided by the ros_gz_sim package
     gazebo = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')]),
                     launch_arguments={'gz_args': ['-r -v4 ', world], 'on_exit_shutdown': 'true'}.items()
-    )
+             )
 
-    gazebo = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([os.path.join(
-                    get_package_share_directory('ros_gz_sim'), 'launch'), '/gz_sim.launch.py']),
-                    launch_arguments={'gz_args': ['-r -s -v4 --render-engine ogre ', world], 'on_exit_shutdown': 'true'}.items()
-                 #   launch_arguments={'gz_args': '-r -s -v 4 --render-engine ogre ' + world}.items()
-    )
+    # COMENTO ESTA CONFIGURACIÓN QUE ME FUNCIONÓ EN RPi SIN DAR ERRORES 
+    # gazebo = IncludeLaunchDescription(
+    #             PythonLaunchDescriptionSource([os.path.join(
+    #                 get_package_share_directory('ros_gz_sim'), 'launch'), '/gz_sim.launch.py']),
+    #                 launch_arguments={'gz_args': ['-r -s -v4 --render-engine ogre ', world], 'on_exit_shutdown': 'true'}.items()
+    #              #   launch_arguments={'gz_args': '-r -s -v 4 --render-engine ogre ' + world}.items()
+    # )
 
     # Run the spawner node from the gazebo_ros package. The entity name doesn't really matter if you only have a single robot.
     spawn_entity = Node(package='ros_gz_sim', executable='create',
@@ -65,18 +66,22 @@ def generate_launch_description():
 
     # Bridge between Gazebo and ROS2 topics
     # This bridges /cmd_vel from ROS2 to Gazebo and /odom from Gazebo to ROS2
-    bridge = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
+    bridge_params = os.path.join(get_package_share_directory(package_name),'config','gz_bridge.yaml')
+    ros_gz_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
         arguments=[
-            '/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist',
-            '/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry',
-            '/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V',
-            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-            '/camera@sensor_msgs/msg/Image@gz.msgs.Image',
-        ],
-        output='screen'
+            '--ros-args',
+            '-p',
+            f'config_file:={bridge_params}',
+        ]
+    )
+
+
+    ros_gz_image_bridge = Node(
+        package="ros_gz_image",
+        executable="image_bridge",
+        arguments=["/camera/image_raw"]
     )
 
     # Controllers de los componentes hardware
@@ -111,7 +116,8 @@ def generate_launch_description():
         rsp,
         gazebo,
         spawn_entity,
-        bridge,
+        ros_gz_bridge,
+        ros_gz_image_bridge,
         diff_drive_spawner,
         joint_broad_spawner,
         teleop_node

@@ -1,7 +1,8 @@
 controller_manager:
   ros__parameters:
-    update_rate: 50
-    use_sim_time: false
+    update_rate: 30
+    #use_sim_time: false
+    use_sim_time: true
 
     diff_cont:
       type: diff_drive_controller/DiffDriveController
@@ -22,3 +23,6 @@ diff_cont:
     wheel_radius: 0.05
 
 
+# no lo usamos por ahora, pero dejamos el ejemplo
+#joint_broad:
+#  ros__parameters:

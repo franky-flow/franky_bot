@@ -13,10 +13,10 @@ controller_manager:
 diff_cont:
   ros__parameters:
     base_frame_id: base_link
-    use_stamped_vel: true
+    use_stamped_vel: false  # false = acepta Twist, true = acepta TwistStamped
     cmd_vel_timeout: 0.5
     publish_rate: 50.0
-    open_loop: false
+   # open_loop: false
     left_wheel_names: ['left_wheel_joint']
     right_wheel_names: ['right_wheel_joint']
     wheel_separation: 0.35

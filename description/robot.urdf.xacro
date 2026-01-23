@@ -1,10 +1,28 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro"  name="robot">
 
+    <!-- Args to define whether to use ROS2 control or Gazebo control -->
+    <xacro:arg name="use_ros2_control" default="true"/>
+    <xacro:arg name="sim_mode" default="false"/>
+
+    <!-- Robot core -->
     <xacro:include filename="robot_core.xacro" />
-    <!-- <xacro:include filename="gazebo_control.xacro" /> SUSTITUIDO POR ros2_control.xacro -->
-    <xacro:include filename="ros2_control.xacro" />
+
+    <!-- ROS2 control -->
+    <xacro:if value="$(arg use_ros2_control)">
+        <xacro:include filename="ros2_control.xacro" />
+    </xacro:if>
+
+    <!-- Gazebo control -->
+    <xacro:unless value="$(arg use_ros2_control)">
+        <xacro:include filename="gazebo_control.xacro" />
+    </xacro:unless>
+    
+    <!-- Sensors -->
     <xacro:include filename="lidar.xacro" />
     <xacro:include filename="camera.xacro" />
+
+    <!-- Frontal Face -->
+    <!-- <xacro:include filename="face.xacro" /> -->
 
 </robot>

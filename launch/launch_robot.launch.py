@@ -27,41 +27,16 @@ def generate_launch_description():
     rsp = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory(package_name),'launch','rsp.launch.py'
-                )]), launch_arguments={'use_sim_time': 'false'}.items()
+                )]), launch_arguments={'use_sim_time': 'false', 'use_ros2_control': 'true'}.items()
     )
 
-    # World file configuration
-    default_world = os.path.join(
-        get_package_share_directory(package_name),
-        'worlds',
-        'empty.world'
-        #'empty-with-shapes1.world'
-    )    
-    
-    world = LaunchConfiguration('world')
-
-    world_arg = DeclareLaunchArgument(
-        'world',
-        default_value=default_world,
-        description='World to load'
+    gamepad = IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([os.path.join(
+                    get_package_share_directory(package_name),'launch','joystick.launch.py'
+                )]), launch_arguments={'use_sim_time': 'true'}.items()
     )
 
 
-    # Bridge between Gazebo and ROS2 topics
-    # This bridges /cmd_vel from ROS2 to Gazebo and /odom from Gazebo to ROS2
-    bridge = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=[
-            '/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist',
-            '/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry',
-            '/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V',
-          #  '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-            '/camera@sensor_msgs/msg/Image@gz.msgs.Image',
-        ],
-        output='screen'
-    )
 
     robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
 
@@ -104,33 +79,31 @@ def generate_launch_description():
         )
     )
 
-    joy_params = os.path.join(get_package_share_directory('franky_bot'),'config','joystick.yaml')
+    #### PROBAMOS GAMEPAD EN LUGAR DE JOY_LINUX ####
+    # joy_params = os.path.join(get_package_share_directory('franky_bot'),'config','joystick.yaml')
 
-    joy_node = Node(
-            package='joy_linux',
-            executable='joy_linux_node',
-            parameters=[joy_params],
-         )
+    # joy_node = Node(
+    #         package='joy_linux',
+    #         executable='joy_linux_node',
+    #         parameters=[joy_params],
+    #      )
 
-    teleop_node = Node(
-            package='teleop_twist_joy', 
-            executable='teleop_node',
-            name = 'teleop_node',
-            parameters=[joy_params],
-            remappings=[('/cmd_vel', '/diff_cont/cmd_vel')]
-            )
+    # teleop_node = Node(
+    #         package='teleop_twist_joy', 
+    #         executable='teleop_node',
+    #         name = 'teleop_node',
+    #         parameters=[joy_params],
+    #         remappings=[('/cmd_vel', '/diff_cont/cmd_vel')]
+    #         )
 
 
 # And add to launch description at the bottom
 
     # Launch them all!
     return LaunchDescription([
-        world_arg,
         rsp,
-        bridge,
+        gamepad,
         delayed_controller_manager,
         delayed_diff_drive_spawner,
-        delayed_joint_broad_spawner,
-        joy_node,
-        teleop_node
+        delayed_joint_broad_spawner,        
     ])

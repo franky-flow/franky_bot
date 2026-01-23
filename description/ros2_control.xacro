@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-<!-- 
+
     <ros2_control name="RealFrankyRobot" type="system">
         <hardware>
             <plugin>diffdrive_arduino/DiffDriveArduinoHardware</plugin> 
@@ -32,10 +32,10 @@
             <state_interface name="velocity"/>
         </joint>
 
-    </ros2_control> -->
+    </ros2_control>
 
 
-    <ros2_control name="GazeboSystem" type="system">
+    <!-- <ros2_control name="GazeboSystem" type="system">
         <hardware>
             <plugin>gz_ros2_control/GazeboSimSystem</plugin> 
         </hardware> 
@@ -61,12 +61,12 @@
 
     </ros2_control>
         
-    <!-- Gazebo plugin para decirle a ROS2 Control que use Gazebo -->
+    Gazebo plugin para decirle a ROS2 Control que use Gazebo
 
     <gazebo>
         <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="libgz_ros2_control-system.so">
             <parameters>$(find franky_bot)/config/my_controllers.yaml</parameters>
         </plugin>
-    </gazebo>
+    </gazebo> -->
 
 </robot>

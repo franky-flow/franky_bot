@@ -26,6 +26,12 @@ def generate_launch_description():
                 )]), launch_arguments={'use_sim_time': 'true'}.items()
     )
 
+    gamepad = IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([os.path.join(
+                    get_package_share_directory(package_name),'launch','joystick.launch.py'
+                )]), launch_arguments={'use_sim_time': 'true'}.items()
+    )
+
     # World file configuration
     default_world = os.path.join(
         get_package_share_directory(package_name),
@@ -114,6 +120,7 @@ def generate_launch_description():
     return LaunchDescription([
         world_arg,
         rsp,
+        gamepad,
         gazebo,
         spawn_entity,
         ros_gz_bridge,

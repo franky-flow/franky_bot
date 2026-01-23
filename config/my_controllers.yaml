@@ -1,8 +1,7 @@
 controller_manager:
   ros__parameters:
-    update_rate: 30
-    #use_sim_time: false
-    use_sim_time: true
+    update_rate: 30    
+    #use_sim_time: true # lo comentamos por completo pues parece funcionar igual que poniendolo en false
 
     diff_cont:
       type: diff_drive_controller/DiffDriveController

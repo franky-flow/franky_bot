@@ -30,14 +30,6 @@ def generate_launch_description():
                 )]), launch_arguments={'use_sim_time': 'false', 'use_ros2_control': 'true'}.items()
     )
 
-    gamepad = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([os.path.join(
-                    get_package_share_directory(package_name),'launch','joystick.launch.py'
-                )]), launch_arguments={'use_sim_time': 'true'}.items()
-    )
-
-
-
     robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
 
     controller_params_file = os.path.join(get_package_share_directory(package_name),'config','my_controllers.yaml')
@@ -79,22 +71,20 @@ def generate_launch_description():
         )
     )
 
-    #### PROBAMOS GAMEPAD EN LUGAR DE JOY_LINUX ####
-    # joy_params = os.path.join(get_package_share_directory('franky_bot'),'config','joystick.yaml')
-
-    # joy_node = Node(
-    #         package='joy_linux',
-    #         executable='joy_linux_node',
-    #         parameters=[joy_params],
-    #      )
-
-    # teleop_node = Node(
-    #         package='teleop_twist_joy', 
-    #         executable='teleop_node',
-    #         name = 'teleop_node',
-    #         parameters=[joy_params],
-    #         remappings=[('/cmd_vel', '/diff_cont/cmd_vel')]
-    #         )
+    #### PROBAMOS GAMEPAD EN LUGAR DE JOY_LINUX QUE ES EL QUE FUNCIONA EN LA RASPBERRY PI ####
+    joy_params = os.path.join(get_package_share_directory('franky_bot'),'config','joystick.yaml')
+    joy_node = Node(
+             package='joy_linux',
+             executable='joy_linux_node',
+             parameters=[joy_params],
+          )
+    teleop_node = Node(
+             package='teleop_twist_joy', 
+             executable='teleop_node',
+             name = 'teleop_node',
+             parameters=[joy_params],
+             remappings=[('/cmd_vel', '/diff_cont/cmd_vel')]
+             )
 
 
 # And add to launch description at the bottom
@@ -102,8 +92,9 @@ def generate_launch_description():
     # Launch them all!
     return LaunchDescription([
         rsp,
-        gamepad,
         delayed_controller_manager,
         delayed_diff_drive_spawner,
         delayed_joint_broad_spawner,        
+        joy_node,
+        teleop_node
     ])

@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Argumentos parametrizados con tus medidas reales -->
+  <xacro:arg name="base_length"        default="0.34"/>   <!-- Longitud del chasis (eje X) -->
+  <xacro:arg name="base_width"         default="0.24"/>   <!-- Ancho del chasis (eje Y) -->
+  <xacro:arg name="base_height"        default="0.14"/>   <!-- Altura del chasis (eje Z) -->
+
+  <xacro:arg name="wheel_radius"       default="0.034"/>  <!-- Radio de las ruedas motrices -->
+  <xacro:arg name="wheel_width"        default="0.030"/>  <!-- Ancho de las ruedas motrices -->
+  <xacro:arg name="wheel_separation"   default="0.275"/>  <!-- Separación entre ruedas motrices -->
+
+  <xacro:arg name="d_front_wheel"      default="0.082"/>  <!-- Distancia desde el frente del chasis a las ruedas motrices -->
+  <xacro:arg name="d_rear_caster"      default="0.065"/>  <!-- Distancia desde la parte trasera del chasis al caster -->
+
+  <xacro:arg name="caster_radius"      default="0.015"/>  <!-- Radio del caster -->
+
+  <!-- Otros parámetros que puedes ajustar (masas aproximadas para simulación) -->
+  <xacro:arg name="chassis_mass"       default="1.0"/>    <!-- Masa del chasis (ajusta según tu build real, e.g., 1kg) -->
+  <xacro:arg name="wheel_mass"         default="0.2"/>    <!-- Masa por rueda motriz (e.g., 200g) -->
+  <xacro:arg name="caster_mass"        default="0.05"/>   <!-- Masa del caster (e.g., 50g) -->
+
+  <!-- Incluir macros de inercias (ya debería estar en tu paquete) -->
+  <xacro:include filename="$(find franky_bot)/description/inertial_macros.xacro" />
+
+  <!-- Resto del archivo... -->
+
+
+<!-- Base link (referencia principal) -->
+<link name="base_link"/>
+
+<!-- Chasis principal -->
+<link name="chassis_link">
+  <visual>
+    <geometry>
+      <box size="$(arg base_length) $(arg base_width) $(arg base_height)"/>
+    </geometry>
+    <material name="gray">
+      <color rgba="0.5 0.5 0.5 1"/>
+    </material>
+  </visual>
+  <collision>
+    <geometry>
+      <box size="$(arg base_length) $(arg base_width) $(arg base_height)"/>
+    </geometry>
+  </collision>
+  <xacro:box_inertial 
+    x="$(arg base_length)" y="$(arg base_width)" z="$(arg base_height)" 
+    mass="$(arg chassis_mass)" />
+</link>
+
+<!-- Joint para unir chasis a base_link (offset en X para centrar, ajusta si necesitas) -->
+<joint name="chassis_joint" type="fixed">
+  <parent link="base_link"/>
+  <child link="chassis_link"/>
+  <origin xyz="0 0 $(eval 0.5 * $(arg base_height) + $(arg wheel_radius))" rpy="0 0 0"/>  <!-- Eleva para que ruedas toquen suelo -->
+</joint>
+
+<!-- Rueda izquierda -->
+<link name="left_wheel_link">
+  <visual>
+    <geometry>
+      <cylinder radius="$(arg wheel_radius)" length="$(arg wheel_width)"/>
+    </geometry>
+    <material name="black">
+      <color rgba="0 0 0 1"/>
+    </material>
+  </visual>
+  <collision>
+    <geometry>
+      <cylinder radius="$(arg wheel_radius)" length="$(arg wheel_width)"/>
+    </geometry>
+  </collision>
+  <xacro:cylinder_inertial 
+    radius="$(arg wheel_radius)" height="$(arg wheel_width)" 
+    mass="$(arg wheel_mass)" />
+</link>
+
+<joint name="left_wheel_joint" type="continuous">
+  <parent link="chassis_link"/>
+  <child link="left_wheel_link"/>
+  <origin xyz="$(eval -$(arg d_front_wheel)) $(eval 0.5 * $(arg wheel_separation)) 0" rpy="-1.5708 0 0"/>  <!-- Rotación para ruedas verticales -->
+  <axis xyz="0 1 0"/>
+</joint>
+
+<!-- Rueda derecha (simétrica) -->
+<link name="right_wheel_link">
+  <!-- Igual que left_wheel_link, copia el bloque -->
+</link>
+
+<joint name="right_wheel_joint" type="continuous">
+  <parent link="chassis_link"/>
+  <child link="right_wheel_link"/>
+  <origin xyz="$(eval -$(arg d_front_wheel)) $(eval -0.5 * $(arg wheel_separation)) 0" rpy="-1.5708 0 0"/>
+  <axis xyz="0 1 0"/>
+</joint>
+
+<!-- Caster trasero (para estabilidad) -->
+<link name="caster_wheel_link">
+  <visual>
+    <geometry>
+      <sphere radius="$(arg caster_radius)"/>
+    </geometry>
+    <material name="white">
+      <color rgba="1 1 1 1"/>
+    </material>
+  </visual>
+  <collision>
+    <geometry>
+      <sphere radius="$(arg caster_radius)"/>
+    </geometry>
+  </collision>
+  <xacro:sphere_inertial 
+    radius="$(arg caster_radius)" 
+    mass="$(arg caster_mass)" />
+</link>
+
+<joint name="caster_wheel_joint" type="fixed">  <!-- O continuous si quieres que gire libre -->
+  <parent link="chassis_link"/>
+  <child link="caster_wheel_link"/>
+  <origin xyz="$(eval -$(arg base_length)/2 + $(arg d_rear_caster)) 0 $(eval -0.5 * $(arg base_height) + $(arg caster_radius))" rpy="0 0 0"/>
+</joint>
+</robot>

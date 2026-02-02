@@ -86,6 +86,13 @@ def generate_launch_description():
              remappings=[('/cmd_vel', '/diff_cont/cmd_vel')]
              )
 
+    # Lidar LD20 Integration
+    lidar_node = IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([os.path.join(
+                    get_package_share_directory('ldlidar_ros2'),'launch','ld19.launch.py'
+                )])
+    )
+
 
 # And add to launch description at the bottom
 
@@ -96,5 +103,6 @@ def generate_launch_description():
         delayed_diff_drive_spawner,
         delayed_joint_broad_spawner,        
         joy_node,
-        teleop_node
+        teleop_node,
+        lidar_node
     ])

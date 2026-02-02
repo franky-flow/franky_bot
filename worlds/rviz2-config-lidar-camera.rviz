@@ -81,7 +81,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        camera_link_optical:
+        camera_optical_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -129,7 +129,7 @@ Visualization Manager:
           Value: true
         camera_link:
           Value: true
-        camera_link_optical:
+        camera_optical_link:
           Value: true
         caster_wheel_link:
           Value: true
@@ -153,7 +153,7 @@ Visualization Manager:
           base_link:
             chassis_link:
               camera_link:
-                camera_link_optical:
+                camera_optical_link:
                   {}
               caster_wheel_link:
                 {}

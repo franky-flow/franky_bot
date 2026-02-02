@@ -9,7 +9,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # Argumentos del launch
     video_device = LaunchConfiguration('video_device', default='/dev/video0')
-    frame_id = LaunchConfiguration('camera_frame_id', default='camera_link_optical')
+    frame_id = LaunchConfiguration('camera_frame_id', default='camera_optical_link')
     image_width = LaunchConfiguration('image_width', default='640')
     image_height = LaunchConfiguration('image_height', default='480')
     framerate = LaunchConfiguration('framerate', default='15.0')
@@ -24,7 +24,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'camera_frame_id',
-            default_value='camera_link_optical',
+            default_value='camera_optical_link',
             description='Frame ID para la imagen (debe coincidir con tu URDF)'
         ),
         DeclareLaunchArgument(

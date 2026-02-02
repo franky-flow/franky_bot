@@ -11,7 +11,7 @@ def generate_launch_description():
             executable='camera_node',
             output='screen',
             parameters=[{
-                'frame_id': 'camera_link_optical',
+                'frame_id': 'camera_optical_link',
                 'width': 640,
                 'height': 480,                
             }]

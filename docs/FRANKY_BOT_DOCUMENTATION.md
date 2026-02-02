@@ -316,7 +316,7 @@ odom
       ├── chassis_link
       │    ├── laser_frame_link (LiDAR)
       │    └── camera_link
-      │         └── camera_link_optical
+      │         └── camera_optical_link
       ├── left_wheel_link
       ├── right_wheel_link
       └── caster_wheel_link
@@ -327,7 +327,7 @@ odom
 - **base_link**: Robot's base reference point
 - **chassis_link**: Physical chassis (offset -0.1m in x from base_link)
 - **laser_frame_link**: LiDAR sensor frame
-- **camera_link_optical**: Camera optical frame (ROS convention)
+- **camera_optical_link**: Camera optical frame (ROS convention)
 
 ---
 

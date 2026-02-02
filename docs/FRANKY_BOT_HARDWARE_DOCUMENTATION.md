@@ -395,7 +395,7 @@ ros2 launch franky_bot joystick_rpi.launch.py
 **Purpose**: Launch USB or Pi Camera using `camera_ros`
 
 **Configuration**:
-- Frame ID: `camera_link_optical`
+- Frame ID: `camera_optical_link`
 - Resolution: 640x480
 
 **Usage**:
@@ -409,7 +409,7 @@ ros2 launch franky_bot pi_camera.launch.py
 
 **Parameters**:
 - `video_device`: `/dev/video0` (default)
-- `camera_frame_id`: `camera_link_optical`
+- `camera_frame_id`: `camera_optical_link`
 - Resolution: 640x480 (configurable)
 - Frame rate: 15 fps (configurable)
 - Pixel format: YUYV or MJPG
@@ -594,7 +594,7 @@ map (if using SLAM/Nav2)
            ├── chassis_link
            │    ├── laser_frame_link (LiDAR sensor)
            │    └── camera_link
-           │         └── camera_link_optical (ROS camera convention)
+           │         └── camera_optical_link (ROS camera convention)
            ├── left_wheel_link
            ├── right_wheel_link
            └── caster_wheel_link

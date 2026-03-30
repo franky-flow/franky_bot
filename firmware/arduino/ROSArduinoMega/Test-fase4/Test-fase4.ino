@@ -1,12 +1,12 @@
 /*********************************************************************
- *  ROSArduinoMega - Versión Simplificada para Arduino Mega 2560
+ *  ROSArduinoMega - TEST FASE 4
  *  
- *  Desarrollo incremental paso a paso para control de robot diferencial
- *  Basado en ROSArduinoBridge pero simplificado para aprendizaje
+ *  Control Completo: Serial + Motores + Encoders + PID
  *  
- *  Hardware: Arduino Mega 2560 Rev3 + L298N Motor Driver + Encoders
+ *  Hardware: Arduino Mega 2560 Rev3 + L298N + Encoders
  *  
- *  FASE ACTUAL: 4 - Control PID Completo
+ *  Este archivo contiene la implementación completa de todas las fases
+ *  para probar el sistema completo con control PID.
  *********************************************************************/
 
 #include <Arduino.h>
@@ -509,7 +509,7 @@ void setup() {
   resetPID();
   
   // Mensaje de inicio
-  Serial.println("ROSArduinoMega FASE 4 - Ready!");
+  Serial.println("ROSArduinoMega TEST FASE 4 - Ready!");
 }
 
 /* ===== LOOP - Se ejecuta continuamente ===== */

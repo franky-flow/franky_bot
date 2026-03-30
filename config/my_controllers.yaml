@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 30    
+    update_rate: 30  # Sincronizado con PID del Arduino (30 Hz)
     #use_sim_time: true # lo comentamos por completo pues parece funcionar igual que poniendolo en false
 
     diff_cont:
@@ -25,7 +25,7 @@ diff_cont:
     right_wheel_names: ['right_wheel_joint']
 
     publish_rate: 50.0
-    cmd_vel_timeout: 0.5
+    cmd_vel_timeout: 0.2  # Reducido de 0.5 para detección más rápida
     
 
 

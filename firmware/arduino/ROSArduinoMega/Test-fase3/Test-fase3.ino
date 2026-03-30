@@ -1,25 +1,19 @@
 /*********************************************************************
- *  ROSArduinoMega - Versión Simplificada para Arduino Mega 2560
+ *  ROSArduinoMega - TEST FASE 3
  *  
- *  Desarrollo incremental paso a paso para control de robot diferencial
- *  Basado en ROSArduinoBridge pero simplificado para aprendizaje
+ *  Comunicación Serial + Control de Motores + Lectura de Encoders
  *  
- *  Hardware: Arduino Mega 2560 Rev3 + L298N Motor Driver + Encoders
+ *  Hardware: Arduino Mega 2560 Rev3 + L298N + Encoders
  *  
- *  FASE ACTUAL: 4 - Control PID Completo
+ *  Este archivo contiene la implementación de FASE 1 + FASE 2 + FASE 3
+ *  para probar la comunicación serial, control de motores y encoders.
  *********************************************************************/
 
 #include <Arduino.h>
 
 /* ===== CONFIGURACIÓN GENERAL ===== */
-#define BAUDRATE 115200  // Velocidad de comunicación serial (aumentada para reducir delays)
-#define MAX_PWM  255     // Valor máximo PWM
-#define MIN_PWM  45      // PWM mínimo para vencer fricción estática (zona muerta)
-
-/* ===== CONFIGURACIÓN PID (FASE 4) ===== */
-#define PID_RATE           30     // Hz - Frecuencia del bucle PID
-#define PID_INTERVAL       (1000 / PID_RATE)  // ms - Intervalo entre cálculos PID
-#define AUTO_STOP_INTERVAL 2000   // ms - Tiempo sin comandos para auto-stop
+#define BAUDRATE 57600  // Velocidad de comunicación serial
+#define MAX_PWM  255    // Valor máximo PWM
 
 /* ===== COMANDOS ===== */
 // Comandos básicos (FASE 1)
@@ -32,15 +26,12 @@
 #define PIN_MODE       'c'  // Configurar modo de pin
 
 // Comandos de motores (FASE 2)
-#define MOTOR_SPEEDS   'm'  // Velocidad motores (arg1=izq, arg2=der) en ticks/frame
-#define MOTOR_RAW_PWM  'o'  // Control directo PWM sin PID (arg1=izq, arg2=der)
+#define MOTOR_SPEEDS   'm'  // Velocidad motores (arg1=izq, arg2=der) en PWM
+#define MOTOR_RAW_PWM  'o'  // Control directo PWM (arg1=izq, arg2=der)
 
 // Comandos de encoders (FASE 3)
 #define READ_ENCODERS  'e'  // Leer contadores de encoders
 #define RESET_ENCODERS 'r'  // Resetear contadores a cero
-
-// Comandos de PID (FASE 4)
-#define UPDATE_PID     'u'  // Actualizar parámetros PID (formato: Kp:Kd:Ki:Ko)
 
 /* ===== CONFIGURACIÓN PINES L298N (FASE 2) ===== */
 // Motor Izquierdo
@@ -80,35 +71,6 @@ long arg2;             // Segundo argumento convertido a entero
 // Variables para encoders (FASE 3)
 volatile long leftEncoderCount = 0;   // Contador del encoder izquierdo (volatile para ISR)
 volatile long rightEncoderCount = 0;  // Contador del encoder derecho (volatile para ISR)
-
-/* ===== ESTRUCTURA Y VARIABLES PID (FASE 4) ===== */
-
-/* Estructura de datos PID para un motor
- * Contiene toda la información necesaria para el control PID de velocidad
- */
-typedef struct {
-  double TargetTicksPerFrame;  // Velocidad objetivo en ticks por frame
-  long Encoder;                // Valor actual del encoder
-  long PrevEnc;                // Valor anterior del encoder
-  int PrevInput;               // Entrada anterior (para derivada mejorada)
-  int ITerm;                   // Término integral acumulado
-  long output;                 // Salida PWM calculada
-} SetPointInfo;
-
-// Estructuras PID para cada motor
-SetPointInfo leftPID, rightPID;
-
-// Parámetros PID (ajustables con comando 'u')
-// Optimizados para movimientos suaves sin oscilaciones
-int Kp = 12;  // Ganancia proporcional (muy reducida para movimientos suaves)
-int Kd = 20;  // Ganancia derivativa (alta para máxima amortiguación)
-int Ki = 0;   // Ganancia integral (desactivada - puede causar problemas en giros)
-int Ko = 50;  // Factor de escalado
-
-// Variables de control
-unsigned char moving = 0;              // ¿Está el robot en movimiento?
-unsigned long nextPID = PID_INTERVAL;  // Tiempo del próximo cálculo PID
-long lastMotorCommand = AUTO_STOP_INTERVAL;  // Tiempo del último comando de motor
 
 /* ===== FUNCIONES DE ENCODERS (FASE 3) - VERSIÓN SIMPLE Y ROBUSTA ===== */
 
@@ -183,97 +145,6 @@ void resetEncoders() {
   rightEncoderCount = 0;
 }
 
-/* ===== FUNCIONES PID (FASE 4) ===== */
-
-/* Resetear variables PID a estado inicial
- * Previene picos de arranque al iniciar movimiento
- * Ver: http://brettbeauregard.com/blog/2011/04/improving-the-beginner%E2%80%99s-pid-initialization/
- */
-void resetPID() {
-  // Resetear PID izquierdo
-  leftPID.TargetTicksPerFrame = 0.0;
-  leftPID.Encoder = readEncoder(LEFT);
-  leftPID.PrevEnc = leftPID.Encoder;
-  leftPID.output = 0;
-  leftPID.PrevInput = 0;
-  leftPID.ITerm = 0;
-  
-  // Resetear PID derecho
-  rightPID.TargetTicksPerFrame = 0.0;
-  rightPID.Encoder = readEncoder(RIGHT);
-  rightPID.PrevEnc = rightPID.Encoder;
-  rightPID.output = 0;
-  rightPID.PrevInput = 0;
-  rightPID.ITerm = 0;
-}
-
-/* Calcular PID para un motor
- * Implementa control PID mejorado evitando derivative kick
- * Ver: http://brettbeauregard.com/blog/2011/04/improving-the-beginner%E2%80%99s-pid-derivative-kick/
- */
-void doPID(SetPointInfo * p) {
-  long Perror;   // Error proporcional
-  long output;   // Salida calculada
-  int input;     // Entrada actual (ticks en este frame)
-  
-  // Calcular entrada actual (cuántos ticks se movió)
-  input = p->Encoder - p->PrevEnc;
-  
-  // Calcular error (diferencia entre objetivo y actual)
-  Perror = p->TargetTicksPerFrame - input;
-  
-  // Calcular salida PID
-  // P: Error proporcional
-  // D: Cambio en entrada (evita derivative kick)
-  // I: Término integral acumulado
-  output = (Kp * Perror - Kd * (input - p->PrevInput) + p->ITerm) / Ko;
-  
-  // Guardar encoder anterior para próximo cálculo
-  p->PrevEnc = p->Encoder;
-  
-  // Añadir salida anterior (acumulativo)
-  output += p->output;
-  
-  // Limitar salida y acumular integral
-  if (output >= MAX_PWM) {
-    output = MAX_PWM;
-  } else if (output <= -MAX_PWM) {
-    output = -MAX_PWM;
-  } else {
-    // Solo acumular integral si no estamos saturados
-    p->ITerm += Ki * Perror;
-  }
-  
-  // Guardar valores para próxima iteración
-  p->output = output;
-  p->PrevInput = input;
-}
-
-/* Actualizar control PID de ambos motores
- * Se llama periódicamente desde el loop principal
- */
-void updatePID() {
-  // Leer encoders actuales
-  leftPID.Encoder = readEncoder(LEFT);
-  rightPID.Encoder = readEncoder(RIGHT);
-  
-  // Si no estamos en movimiento, resetear PID
-  if (!moving) {
-    // Resetear solo una vez para evitar spikes
-    if (leftPID.PrevInput != 0 || rightPID.PrevInput != 0) {
-      resetPID();
-    }
-    return;
-  }
-  
-  // Calcular PID para cada motor
-  doPID(&rightPID);
-  doPID(&leftPID);
-  
-  // Aplicar salidas PID a los motores
-  setMotorSpeeds(leftPID.output, rightPID.output);
-}
-
 /* ===== FUNCIONES DE MOTORES (FASE 2) ===== */
 
 /* Inicializar pines del driver de motores L298N */
@@ -315,12 +186,6 @@ void setMotorSpeed(int motor, int speed) {
   // Limitar velocidad al máximo
   if (speed > MAX_PWM)
     speed = MAX_PWM;
-  
-  // ZONA MUERTA: Aplicar PWM mínimo si speed > 0
-  // Los motores DC necesitan un PWM mínimo para vencer fricción estática
-  if (speed > 0 && speed < MIN_PWM) {
-    speed = MIN_PWM;
-  }
   
   // Aplicar velocidad y dirección según el motor
   if (motor == LEFT) {
@@ -418,32 +283,14 @@ int runCommand() {
       break;
     
     case MOTOR_SPEEDS:
-      // Control de velocidad con PID (FASE 4)
-      // arg1 = ticks/frame izquierdo, arg2 = ticks/frame derecho
-      // Resetear timer de auto-stop
-      lastMotorCommand = millis();
-      
-      // Si ambos son cero, detener y resetear PID
-      if (arg1 == 0 && arg2 == 0) {
-        setMotorSpeeds(0, 0);
-        resetPID();
-        moving = 0;
-      } else {
-        moving = 1;
-      }
-      
-      // Establecer objetivos de velocidad para PID
-      leftPID.TargetTicksPerFrame = arg1;
-      rightPID.TargetTicksPerFrame = arg2;
+      // Control de velocidad de motores (arg1=izquierdo, arg2=derecho)
+      // Rango: -255 a +255 (negativo=reversa, positivo=adelante, 0=stop)
+      setMotorSpeeds(arg1, arg2);
       Serial.println("OK");
       break;
     
     case MOTOR_RAW_PWM:
-      // Control directo PWM sin PID (FASE 2 compatible)
-      // Útil para pruebas o control manual
-      lastMotorCommand = millis();
-      resetPID();
-      moving = 0;  // Desactivar PID temporalmente
+      // Control directo PWM (igual que MOTOR_SPEEDS en esta fase)
       setMotorSpeeds(arg1, arg2);
       Serial.println("OK");
       break;
@@ -457,35 +304,9 @@ int runCommand() {
       break;
     
     case RESET_ENCODERS:
-      // Resetear contadores de encoders y PID
+      // Resetear contadores de encoders a cero
       resetEncoders();
-      resetPID();
       Serial.println("OK");
-      break;
-    
-    case UPDATE_PID:
-      // Actualizar parámetros PID
-      // Formato: u Kp:Kd:Ki:Ko
-      // Ejemplo: u 20:12:0:50
-      {
-        int i = 0;
-        char *p = argv1;
-        char *str;
-        int pid_args[4];
-        
-        // Parsear string separado por ":"
-        while ((str = strtok_r(p, ":", &p)) != NULL && i < 4) {
-          pid_args[i] = atoi(str);
-          i++;
-        }
-        
-        // Actualizar parámetros
-        Kp = pid_args[0];
-        Kd = pid_args[1];
-        Ki = pid_args[2];
-        Ko = pid_args[3];
-        Serial.println("OK");
-      }
       break;
       
     default:
@@ -505,11 +326,8 @@ void setup() {
   // Inicializar controlador de motores (FASE 2)
   initMotorController();
   
-  // Inicializar PID (FASE 4)
-  resetPID();
-  
   // Mensaje de inicio
-  Serial.println("ROSArduinoMega FASE 4 - Ready!");
+  Serial.println("ROSArduinoMega TEST FASE 3 - Ready!");
 }
 
 /* ===== LOOP - Se ejecuta continuamente ===== */
@@ -562,19 +380,5 @@ void loop() {
         index++;
       }
     }
-  }
-  
-  // ===== BUCLE PID (FASE 4) =====
-  // Ejecutar PID a intervalos regulares (30 Hz)
-  if (millis() > nextPID) {
-    updatePID();
-    nextPID += PID_INTERVAL;
-  }
-  
-  // ===== AUTO-STOP POR SEGURIDAD (FASE 4) =====
-  // Detener motores si no hay comandos recientes
-  if ((millis() - lastMotorCommand) > AUTO_STOP_INTERVAL) {
-    setMotorSpeeds(0, 0);
-    moving = 0;
   }
 }
